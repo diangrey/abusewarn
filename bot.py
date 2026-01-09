@@ -9,7 +9,7 @@ from telegram.ext import (
 )
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-OWNER_ID = 1234567890
+OWNER_ID = 1999645649
 BADWORDS_FILE = "badwords.txt"
 
 
