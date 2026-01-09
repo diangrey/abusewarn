@@ -17,13 +17,15 @@ def load_badwords():
     if not os.path.exists(BADWORDS_FILE):
         return []
     with open(BADWORDS_FILE, "r", encoding="utf-8") as f:
-        return [x.strip().lower() for x in f.readlines()]
+        return [x.strip().lower() for x in f.readlines() if x.strip()]
 
 
 def save_badword(word):
     with open(BADWORDS_FILE, "a", encoding="utf-8") as f:
         f.write(word + "\n")
 
+
+# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
 
@@ -31,7 +33,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "👋 Hello!\n\n"
             "🛡️ I am an Abuse Control Bot.\n"
-            "• Make me admin (Delete Messages permission)\nI automatically delete abusive messages in Telegram groups."
+            "• Make me admin (Delete Messages permission)\n"
+            "I automatically delete abusive messages in Telegram groups."
         )
     else:
         await update.message.reply_text(
@@ -39,12 +42,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "⚠️ Abusive language will be deleted automatically."
         )
 
+
+# /add command (owner only)
 async def add_badword(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID:
         return
 
     if not context.args:
-        await update.message.reply_text("Usage: `/add word`", parse_mode="Markdown")
+        await update.message.reply_text("Usage: /add word")
         return
 
     word = context.args[0].lower()
@@ -55,14 +60,16 @@ async def add_badword(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     save_badword(word)
-    await update.message.reply_text(
-        f"✅ Abusive word added: `{word}`",
-        parse_mode="Markdown"
-    )
+    await update.message.reply_text(f"✅ Abusive word added: {word}")
 
 
+# message checker (groups only)
 async def check_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
+        return
+
+    chat = update.effective_chat
+    if chat.type not in ["group", "supergroup"]:
         return
 
     text = update.message.text.lower()
@@ -73,9 +80,8 @@ async def check_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             try:
                 await update.message.delete()
                 await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text="⚠️ Abusive language is not allowed here!",
-                    parse_mode="Markdown"
+                    chat_id=chat.id,
+                    text="⚠️ Abusive language is not allowed here!"
                 )
             except:
                 pass
